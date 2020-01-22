@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="reflex-core",
-    version="0.0.1",
+    version="0.0.2",
     author="Cloud Mitigator",
     author_email="cloudmitigator@gmail.com",
     description="Package for providing core Reflex rule classes",
