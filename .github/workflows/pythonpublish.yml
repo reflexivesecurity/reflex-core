@@ -17,16 +17,11 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install setuptools wheel twine
-    - name: Get the version
-      id: get_version
-      run: |
-        export VERSION=${GITHUB_REF/refs\/tags\//}
-        echo $VERSION
     - name: Build and publish
       env:
         TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
         TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
-        VERSION: ${VERSION}
+        VERSION: ${GITHUB_REF/refs\/tags\//}
       run: |
         python setup.py sdist bdist_wheel
         twine upload dist/*
