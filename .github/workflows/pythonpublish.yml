@@ -21,7 +21,7 @@ jobs:
       env:
         TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
         TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
-        VERSION: ${GITHUB_REF/refs\/tags\//}
       run: |
+        export VERSION=${GITHUB_REF/refs\/tags\//}
         python setup.py sdist bdist_wheel
         twine upload dist/*
