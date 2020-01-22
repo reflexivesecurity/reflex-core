@@ -1,11 +1,12 @@
 import setuptools
+import os
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
     name="reflex-core",
-    version="0.0.2",
+    version=f"{os.environ['VERSION']}",
     author="Cloud Mitigator",
     author_email="cloudmitigator@gmail.com",
     description="Package for providing core Reflex rule classes",
