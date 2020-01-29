@@ -14,7 +14,7 @@ You can install `reflex-core` using `pip`.
 To utilize `reflex-core`, simply import the rule class you want to utilize and implement the required methods.  
 
 ```
-from reflex-core import AWSRule
+from reflex_core import AWSRule
 
 class MyRule(AWSRule):
     def extract_event_data(event):
