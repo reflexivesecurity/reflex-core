@@ -136,18 +136,18 @@ class AWSRule:
         if isinstance(functions, list):
             for function in functions:
                 try:
-                    self.pre_remediation_functions.remove(function)
+                    self.post_remediation_functions.remove(function)
                 except ValueError:
                     self.LOGGER.warning(
-                        "%s is not in the list of pre-remediation functions. Skipping",
+                        "%s is not in the list of post-remediation functions. Skipping",
                         function,
                     )
         else:
             try:
-                self.pre_remediation_functions.remove(functions)
+                self.post_remediation_functions.remove(functions)
             except ValueError:
                 self.LOGGER.warning(
-                    "%s is not in the list of pre-remediation functions. Skipping",
+                    "%s is not in the list of post-remediation functions. Skipping",
                     functions,
                 )
 
@@ -179,8 +179,9 @@ class AWSRule:
         """
         Stop a Notifier or list of Notifiers from sending remediation notifications.
 
-        Takes a function or list of functions and removes them from the list
-        of post-remediation functions. Anything not in the list will be ignored.
+        Takes a Notifier or list of Notifiers and stops them from sending
+        remediation notifications. Anything not currently configured to send
+        notifictions will be ignored.
         """
         if isinstance(notifiers, list):
             for notifier in notifiers:
@@ -199,7 +200,7 @@ class AWSRule:
                 )
 
     def notify(self):
-        """ Notify via SNS that the resource has been remediated """
+        """ Send notification messages with all Notifiers """
         for notifier in self.notifiers:
             try:
                 notifier().notify(self.get_remediation_message())
