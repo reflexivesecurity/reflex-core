@@ -160,14 +160,14 @@ class AWSRule:
         """
         if isinstance(notifiers, list):
             for notifier in notifiers:
-                if isinstance(notifier, Notifier):
+                if issubclass(notifier, Notifier):
                     self.notifiers.append(notifier)
                 else:
                     self.LOGGER.warning(
                         "%s is not a Notifier. Not adding to list of Notifiers.",
                         notifier,
                     )
-        elif isinstance(notifiers, Notifier):
+        elif issubclass(notifiers, Notifier):
             self.notifiers.append(notifiers)
         else:
             self.LOGGER.warning(
