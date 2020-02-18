@@ -1,0 +1,247 @@
+import os
+import unittest
+from unittest.mock import patch
+
+from reflex_core import aws_rule
+
+
+class TestAwsRule(unittest.TestCase):
+    EVENT = {}
+
+    def test_create_aws_rule_fully_implemented(self):
+        FullyImplementedAwsRule(self.EVENT)
+
+    def test_create_aws_rule_all_function_not_implemented(self):
+        with self.assertRaises(NotImplementedError):
+            NotImplementedAwsRule(self.EVENT)
+
+    def test_extract_not_implemented(self):
+        with self.assertRaises(NotImplementedError):
+            ExtractNotImplementedAwsRule(self.EVENT)
+
+    def test_remediate_not_implemented(self):
+        with self.assertRaises(NotImplementedError):
+            test = RemediateNotImplementedAwsRule(self.EVENT)
+            test.remediate()
+
+    def test_resource_not_implemented(self):
+        with self.assertRaises(NotImplementedError):
+            test = ResourceNotImplementedAwsRule(self.EVENT)
+            test.resource_compliant()
+
+    def test_message_not_implemented(self):
+        with self.assertRaises(NotImplementedError):
+            test = MessageNotImplementedAwsRule(self.EVENT)
+            test.get_remediation_message()
+
+    def test_fully_implemented_run_compliance_rule(self):
+        os.environ["SNS_TOPIC"] = "test"
+        with patch('botocore.client.BaseClient._make_api_call') as boto:
+            test = FullyImplementedAwsRule(self.EVENT)
+            test.run_compliance_rule()
+            boto.assert_called_with('Publish',
+                                    {'TopicArn': 'test', 'Message': None})
+
+    def test_add_and_execute_pre_remediation_action(self):
+        os.environ["SNS_TOPIC"] = "test"
+        with patch('botocore.client.BaseClient._make_api_call') as boto:
+            test = FullyImplementedAwsRule(self.EVENT)
+
+            def print_test():
+                print("test")
+
+            test.add_pre_remediation_functions(print_test)
+            test.run_compliance_rule()
+            self.assertEqual(test.pre_remediation_functions[0], print_test)
+            boto.assert_called_with('Publish',
+                                    {'TopicArn': 'test', 'Message': None})
+
+    def test_add_and_execute_pre_remediation_actions(self):
+        os.environ["SNS_TOPIC"] = "test"
+        with patch('botocore.client.BaseClient._make_api_call') as boto:
+            test = FullyImplementedAwsRule(self.EVENT)
+
+            def print_test():
+                print("test")
+
+            test.add_pre_remediation_functions([print_test, print_test])
+            test.run_compliance_rule()
+            self.assertEqual(test.pre_remediation_functions, [print_test, print_test])
+
+            boto.assert_called_with('Publish',
+                                    {'TopicArn': 'test', 'Message': None})
+
+    @patch('logging.Logger.warning')
+    def test_add_and_execute_non_executable_pre_remediation_action(self, mock_log):
+        os.environ["SNS_TOPIC"] = "test"
+        with patch('botocore.client.BaseClient._make_api_call') as boto:
+            test = FullyImplementedAwsRule(self.EVENT)
+
+            my_string = "string"
+
+            test.add_pre_remediation_functions(my_string)
+            test.run_compliance_rule()
+            mock_log.assert_called_with('%s is not a function or list. Not adding to list of pre-remediation functions.', 'string')
+
+    @patch('logging.Logger.warning')
+    def test_add_and_execute_non_executables_pre_remediation_actions(self, mock_log):
+        os.environ["SNS_TOPIC"] = "test"
+        with patch('botocore.client.BaseClient._make_api_call') as boto:
+            test = FullyImplementedAwsRule(self.EVENT)
+
+            my_string = "string"
+
+            test.add_pre_remediation_functions([my_string, my_string])
+            test.run_compliance_rule()
+            mock_log.assert_called_with('%s is not a function. Not adding to list of pre-remediation functions.', 'string')
+
+    def test_remove_pre_remediation_action(self):
+        os.environ["SNS_TOPIC"] = "test"
+        with patch('botocore.client.BaseClient._make_api_call') as boto:
+            test = FullyImplementedAwsRule(self.EVENT)
+
+            def print_test():
+                print("test")
+            test.add_pre_remediation_functions(print_test)
+            test.remove_pre_remediation_functions(print_test)
+            test.run_compliance_rule()
+            self.assertEqual(test.pre_remediation_functions, [])
+
+            boto.assert_called_with('Publish',
+                                    {'TopicArn': 'test', 'Message': None})
+
+    def test_remove_pre_remediation_actions(self):
+        os.environ["SNS_TOPIC"] = "test"
+        with patch('botocore.client.BaseClient._make_api_call') as boto:
+            test = FullyImplementedAwsRule(self.EVENT)
+
+            def print_test():
+                print("test")
+            test.add_pre_remediation_functions([print_test, print_test])
+            test.remove_pre_remediation_functions([print_test, print_test])
+            test.run_compliance_rule()
+            self.assertEqual(test.pre_remediation_functions, [])
+
+            boto.assert_called_with('Publish',
+                                    {'TopicArn': 'test', 'Message': None})
+
+    @patch('logging.Logger.warning')
+    def test_remove_pre_remediation_actions_value_error(self, mock_log):
+        os.environ["SNS_TOPIC"] = "test"
+        with patch('botocore.client.BaseClient._make_api_call') as boto:
+            test = FullyImplementedAwsRule(self.EVENT)
+
+            def print_test():
+                print("test")
+
+            def new_test():
+                print("test")
+            test.add_pre_remediation_functions([print_test, print_test])
+            test.remove_pre_remediation_functions([print_test, new_test])
+            test.run_compliance_rule()
+            self.assertEqual(test.pre_remediation_functions, [print_test])
+
+            boto.assert_called_with('Publish',
+                                    {'TopicArn': 'test', 'Message': None})
+            self.assertEqual(mock_log.call_args[0][0], '%s is not in the list of pre-remediation functions. Skipping')
+
+    @patch('logging.Logger.warning')
+    def test_remove_pre_remediation_action_value_error(self, mock_log):
+        os.environ["SNS_TOPIC"] = "test"
+        with patch('botocore.client.BaseClient._make_api_call') as boto:
+            test = FullyImplementedAwsRule(self.EVENT)
+
+            def print_test():
+                print("test")
+
+            def new_test():
+                print("test")
+
+            test.add_pre_remediation_functions(print_test)
+            test.remove_pre_remediation_functions(new_test)
+            test.run_compliance_rule()
+            self.assertEqual(test.pre_remediation_functions, [print_test])
+
+            boto.assert_called_with('Publish',
+                                    {'TopicArn': 'test', 'Message': None})
+            self.assertEqual(mock_log.call_args[0][0],
+                             '%s is not in the list of pre-remediation functions. Skipping')
+
+
+
+class NotImplementedAwsRule(aws_rule.AWSRule):
+    def __init__(self, event):
+        super().__init__(event)
+
+
+class FullyImplementedAwsRule(aws_rule.AWSRule):
+    def __init__(self, event):
+        super().__init__(event)
+
+    def remediate(self):
+        pass
+
+    def extract_event_data(self, event):
+        pass
+
+    def resource_compliant(self):
+        pass
+
+    def get_remediation_message(self):
+        pass
+
+
+class ExtractNotImplementedAwsRule(aws_rule.AWSRule):
+    def __init__(self, event):
+        super().__init__(event)
+
+    def remediate(self):
+        pass
+
+    def resource_compliant(self):
+        pass
+
+    def get_remediation_message(self):
+        pass
+
+
+class RemediateNotImplementedAwsRule(aws_rule.AWSRule):
+    def __init__(self, event):
+        super().__init__(event)
+
+    def extract_event_data(self, event):
+        pass
+
+    def resource_compliant(self):
+        pass
+
+    def get_remediation_message(self):
+        pass
+
+
+class ResourceNotImplementedAwsRule(aws_rule.AWSRule):
+    def __init__(self, event):
+        super().__init__(event)
+
+    def remediate(self):
+        pass
+
+    def extract_event_data(self, event):
+        pass
+
+    def get_remediation_message(self):
+        pass
+
+
+class MessageNotImplementedAwsRule(aws_rule.AWSRule):
+    def __init__(self, event):
+        super().__init__(event)
+
+    def remediate(self):
+        pass
+
+    def extract_event_data(self, event):
+        pass
+
+    def resource_compliant(self):
+        pass
