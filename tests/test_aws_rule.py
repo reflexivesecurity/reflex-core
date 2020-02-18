@@ -167,6 +167,131 @@ class TestAwsRule(unittest.TestCase):
             self.assertEqual(mock_log.call_args[0][0],
                              '%s is not in the list of pre-remediation functions. Skipping')
 
+    def test_add_and_execute_post_remediation_action(self):
+        os.environ["SNS_TOPIC"] = "test"
+        with patch('botocore.client.BaseClient._make_api_call') as boto:
+            test = FullyImplementedAwsRule(self.EVENT)
+
+            def print_test():
+                print("test")
+
+            test.add_post_remediation_functions(print_test)
+            test.run_compliance_rule()
+            self.assertEqual(test.post_remediation_functions[1], print_test)
+            boto.assert_called_with('Publish',
+                                    {'TopicArn': 'test', 'Message': None})
+
+    def test_add_and_execute_post_remediation_actions(self):
+        os.environ["SNS_TOPIC"] = "test"
+        with patch('botocore.client.BaseClient._make_api_call') as boto:
+            test = FullyImplementedAwsRule(self.EVENT)
+
+            def print_test():
+                print("test")
+
+            test.add_post_remediation_functions([print_test, print_test])
+            test.run_compliance_rule()
+            self.assertEqual(test.post_remediation_functions[1:3], [print_test, print_test])
+
+            boto.assert_called_with('Publish',
+                                    {'TopicArn': 'test', 'Message': None})
+
+    @patch('logging.Logger.warning')
+    def test_add_and_execute_non_executable_post_remediation_action(self, mock_log):
+        os.environ["SNS_TOPIC"] = "test"
+        with patch('botocore.client.BaseClient._make_api_call') as boto:
+            test = FullyImplementedAwsRule(self.EVENT)
+
+            my_string = "string"
+
+            test.add_post_remediation_functions(my_string)
+            test.run_compliance_rule()
+            mock_log.assert_called_with('%s is not a function or list. Not adding to list of post-remediation functions.', 'string')
+
+    @patch('logging.Logger.warning')
+    def test_add_and_execute_non_executables_post_remediation_actions(self, mock_log):
+        os.environ["SNS_TOPIC"] = "test"
+        with patch('botocore.client.BaseClient._make_api_call') as boto:
+            test = FullyImplementedAwsRule(self.EVENT)
+
+            my_string = "string"
+
+            test.add_post_remediation_functions([my_string, my_string])
+            test.run_compliance_rule()
+            mock_log.assert_called_with('%s is not a function. Not adding to list of post-remediation functions.', 'string')
+
+    def test_remove_post_remediation_action(self):
+        os.environ["SNS_TOPIC"] = "test"
+        with patch('botocore.client.BaseClient._make_api_call') as boto:
+            test = FullyImplementedAwsRule(self.EVENT)
+
+            def print_test():
+                print("test")
+            test.add_post_remediation_functions(print_test)
+            test.remove_post_remediation_functions(print_test)
+            test.run_compliance_rule()
+            self.assertEqual(len(test.post_remediation_functions), 1)
+
+            boto.assert_called_with('Publish',
+                                    {'TopicArn': 'test', 'Message': None})
+
+    def test_remove_post_remediation_actions(self):
+        os.environ["SNS_TOPIC"] = "test"
+        with patch('botocore.client.BaseClient._make_api_call') as boto:
+            test = FullyImplementedAwsRule(self.EVENT)
+
+            def print_test():
+                print("test")
+            test.add_post_remediation_functions([print_test, print_test])
+            test.remove_post_remediation_functions([print_test, print_test])
+            test.run_compliance_rule()
+            self.assertEqual(len(test.post_remediation_functions), 1)
+
+            boto.assert_called_with('Publish',
+                                    {'TopicArn': 'test', 'Message': None})
+
+    @patch('logging.Logger.warning')
+    def test_remove_post_remediation_actions_value_error(self, mock_log):
+        os.environ["SNS_TOPIC"] = "test"
+        with patch('botocore.client.BaseClient._make_api_call') as boto:
+            test = FullyImplementedAwsRule(self.EVENT)
+
+            def print_test():
+                print("test")
+
+            def new_test():
+                print("test")
+            test.add_post_remediation_functions([print_test, print_test])
+            test.remove_post_remediation_functions([print_test, new_test])
+            test.run_compliance_rule()
+            self.assertEqual(test.post_remediation_functions[1], print_test)
+
+            boto.assert_called_with('Publish',
+                                    {'TopicArn': 'test', 'Message': None})
+            self.assertEqual(mock_log.call_args[0][0], '%s is not in the list of post-remediation functions. Skipping')
+
+    @patch('logging.Logger.warning')
+    def test_remove_post_remediation_action_value_error(self, mock_log):
+        os.environ["SNS_TOPIC"] = "test"
+        with patch('botocore.client.BaseClient._make_api_call') as boto:
+            test = FullyImplementedAwsRule(self.EVENT)
+
+            def print_test():
+                print("test")
+
+            def new_test():
+                print("test")
+
+            test.add_post_remediation_functions(print_test)
+            test.remove_post_remediation_functions(new_test)
+            test.run_compliance_rule()
+            self.assertEqual(test.post_remediation_functions[1], print_test)
+
+            boto.assert_called_with('Publish',
+                                    {'TopicArn': 'test', 'Message': None})
+            self.assertEqual(mock_log.call_args[0][0],
+                             '%s is not in the list of post-remediation functions. Skipping')
+
 
 
 class NotImplementedAwsRule(aws_rule.AWSRule):
