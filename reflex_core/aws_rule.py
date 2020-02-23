@@ -12,6 +12,8 @@ class AWSRule:
 
     def __init__(self, event):
         """ Initialize the rule object """
+        self.LOGGER.info("Incoming event: %s", event)
+
         self.extract_event_data(event)
         self.pre_remediation_functions = []
         self.post_remediation_functions = []
@@ -26,10 +28,20 @@ class AWSRule:
 
     def run_compliance_rule(self):
         """ Runs all steps of the compliance rule """
+        self.LOGGER.debug("Checking if resource is compliant")
         if not self.resource_compliant():
+            self.LOGGER.debug("Resource is not compliant")
+
             self.pre_remediation()
+
+            self.LOGGER.debug("Remediating resource")
             self.remediate()
+            self.LOGGER.debug("Remediation complete")
+
             self.post_remediation()
+            return
+
+        self.LOGGER.debug("Resource is compliant")
 
     def resource_compliant(self):
         """ Returns True if the resource is compliant, False otherwise """
@@ -41,12 +53,21 @@ class AWSRule:
 
     def pre_remediation(self):
         """ Any steps to take before remediating the resource """
+        self.LOGGER.debug("Running pre-remediation functions")
         for pre_remediation_function in self.pre_remediation_functions:
+            self.LOGGER.debug(
+                "Running pre-remediation function %s", pre_remediation_function.__name__
+            )
             pre_remediation_function()
 
     def post_remediation(self):
         """ Any steps to take after remediating the resource """
+        self.LOGGER.debug("Running post-remediation functions")
         for post_remediation_function in self.post_remediation_functions:
+            self.LOGGER.debug(
+                "Running post-remediation function %s",
+                post_remediation_function.__name__,
+            )
             post_remediation_function()
 
     def get_remediation_message(self):
@@ -63,18 +84,24 @@ class AWSRule:
         if isinstance(functions, list):
             for function in functions:
                 if callable(function):
+                    self.LOGGER.debug(
+                        "Adding %s to pre-remediation functions", function.__name__
+                    )
                     self.pre_remediation_functions.append(function)
                 else:
                     self.LOGGER.warning(
                         "%s is not a function. Not adding to list of pre-remediation functions.",
-                        function,
+                        function.__name__,
                     )
         elif callable(functions):
+            self.LOGGER.debug(
+                "Adding %s to pre-remediation functions", functions.__name__
+            )
             self.pre_remediation_functions.append(functions)
         else:
             self.LOGGER.warning(
                 "%s is not a function or list. Not adding to list of pre-remediation functions.",
-                functions,
+                functions.__name__,
             )
 
     def remove_pre_remediation_functions(self, functions):
@@ -87,19 +114,25 @@ class AWSRule:
         if isinstance(functions, list):
             for function in functions:
                 try:
+                    self.LOGGER.debug(
+                        "Removing %s from pre-remediation functions", function.__name__
+                    )
                     self.pre_remediation_functions.remove(function)
                 except ValueError:
                     self.LOGGER.warning(
                         "%s is not in the list of pre-remediation functions. Skipping",
-                        function,
+                        function.__name__,
                     )
         else:
             try:
+                self.LOGGER.debug(
+                    "Removing %s from pre-remediation functions", functions.__name__
+                )
                 self.pre_remediation_functions.remove(functions)
             except ValueError:
                 self.LOGGER.warning(
                     "%s is not in the list of pre-remediation functions. Skipping",
-                    functions,
+                    functions.__name__,
                 )
 
     def add_post_remediation_functions(self, functions):
@@ -112,18 +145,24 @@ class AWSRule:
         if isinstance(functions, list):
             for function in functions:
                 if callable(function):
+                    self.LOGGER.debug(
+                        "Adding %s to post-remediation functions", function.__name__
+                    )
                     self.post_remediation_functions.append(function)
                 else:
                     self.LOGGER.warning(
                         "%s is not a function. Not adding to list of post-remediation functions.",
-                        function,
+                        function.__name__,
                     )
         elif callable(functions):
+            self.LOGGER.debug(
+                "Adding %s to post-remediation functions", functions.__name__
+            )
             self.post_remediation_functions.append(functions)
         else:
             self.LOGGER.warning(
                 "%s is not a function or list. Not adding to list of post-remediation functions.",
-                functions,
+                functions.__name__,
             )
 
     def remove_post_remediation_functions(self, functions):
@@ -136,19 +175,25 @@ class AWSRule:
         if isinstance(functions, list):
             for function in functions:
                 try:
+                    self.LOGGER.debug(
+                        "Removing %s from post-remediation functions", function.__name__
+                    )
                     self.post_remediation_functions.remove(function)
                 except ValueError:
                     self.LOGGER.warning(
                         "%s is not in the list of post-remediation functions. Skipping",
-                        function,
+                        function.__name__,
                     )
         else:
             try:
+                self.LOGGER.debug(
+                    "Removing %s from post-remediation functions", functions.__name__
+                )
                 self.post_remediation_functions.remove(functions)
             except ValueError:
                 self.LOGGER.warning(
                     "%s is not in the list of post-remediation functions. Skipping",
-                    functions,
+                    functions.__name__,
                 )
 
     def add_notifiers(self, notifiers):
@@ -161,18 +206,22 @@ class AWSRule:
         if isinstance(notifiers, list):
             for notifier in notifiers:
                 if issubclass(notifier, Notifier):
+                    self.LOGGER.debug(
+                        "Adding %s to list of Notifiers", notifier.__name__
+                    )
                     self.notifiers.append(notifier)
                 else:
                     self.LOGGER.warning(
                         "%s is not a Notifier. Not adding to list of Notifiers.",
-                        notifier,
+                        notifier.__name__,
                     )
         elif issubclass(notifiers, Notifier):
+            self.LOGGER.debug("Adding %s to list of Notifiers", notifiers.__name__)
             self.notifiers.append(notifiers)
         else:
             self.LOGGER.warning(
                 "%s is not a Notifier or list. Not adding to list of Notifiers.",
-                notifiers,
+                notifiers.__name__,
             )
 
     def remove_notifiers(self, notifiers):
@@ -186,17 +235,24 @@ class AWSRule:
         if isinstance(notifiers, list):
             for notifier in notifiers:
                 try:
+                    self.LOGGER.debug(
+                        "Removing %s from list of Notifiers", notifier.__name__
+                    )
                     self.notifiers.remove(notifier)
                 except ValueError:
                     self.LOGGER.warning(
-                        "%s is not in the list of Notifiers. Skipping", notifier
+                        "%s is not in the list of Notifiers. Skipping",
+                        notifier.__name__,
                     )
         else:
             try:
+                self.LOGGER.debug(
+                    "Removing %s from list of Notifiers", notifiers.__name__
+                )
                 self.notifiers.remove(notifiers)
             except ValueError:
                 self.LOGGER.warning(
-                    "%s is not in the list of Notifiers. Skipping", notifiers
+                    "%s is not in the list of Notifiers. Skipping", notifiers.__name__
                 )
 
     def notify(self):
