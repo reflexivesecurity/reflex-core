@@ -26,10 +26,15 @@ class AWSRule:
 
     def run_compliance_rule(self):
         """ Runs all steps of the compliance rule """
-        if not self.resource_compliant():
-            self.pre_remediation()
-            self.remediate()
-            self.post_remediation()
+        try:
+            if not self.resource_compliant():
+                self.pre_remediation()
+                self.remediate()
+                self.post_remediation()
+        except SystemExit as exception:
+            if exception.code is None or exception.code == 0:
+                return
+            raise
 
     def resource_compliant(self):
         """ Returns True if the resource is compliant, False otherwise """
