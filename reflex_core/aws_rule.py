@@ -27,21 +27,32 @@ class AWSRule:
         raise NotImplementedError("extract_event_data not implemented")
 
     def run_compliance_rule(self):
-        """ Runs all steps of the compliance rule """
-        self.LOGGER.debug("Checking if resource is compliant")
-        if not self.resource_compliant():
-            self.LOGGER.debug("Resource is not compliant")
+        """
+        Runs all steps of the compliance rule
 
-            self.pre_remediation()
+        Checks for SystemExit to allow for use of sys.exit() to end rule
+        execution without the Lambda failing, incrementing failure counter,
+        and retrying.
+        """
+        try:
+            self.LOGGER.debug("Checking if resource is compliant")
+            if not self.resource_compliant():
+                self.LOGGER.debug("Resource is not compliant")
 
-            self.LOGGER.debug("Remediating resource")
-            self.remediate()
-            self.LOGGER.debug("Remediation complete")
+                self.pre_remediation()
 
-            self.post_remediation()
-            return
+                self.LOGGER.debug("Remediating resource")
+                self.remediate()
+                self.LOGGER.debug("Remediation complete")
 
-        self.LOGGER.debug("Resource is compliant")
+                self.post_remediation()
+                return
+
+            self.LOGGER.debug("Resource is compliant")
+        except SystemExit as exception:
+            if exception.code is None or exception.code == 0:
+                return
+            raise
 
     def resource_compliant(self):
         """ Returns True if the resource is compliant, False otherwise """
