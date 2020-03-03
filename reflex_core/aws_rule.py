@@ -1,5 +1,6 @@
 """ Module for the AWSRule class """
 import logging
+import os
 
 from reflex_core.notifiers import Notifier
 from reflex_core.notifiers import SNSNotifier
@@ -19,7 +20,6 @@ class AWSRule:
         self.post_remediation_functions = []
         self.notifiers = []
 
-        self.add_post_remediation_functions(self.notify)
         self.add_notifiers(SNSNotifier)
 
     def extract_event_data(self, event):
@@ -39,13 +39,17 @@ class AWSRule:
             if not self.resource_compliant():
                 self.LOGGER.debug("Resource is not compliant")
 
-                self.pre_remediation()
+                if self.should_remediate():
+                    self.pre_remediation()
 
-                self.LOGGER.debug("Remediating resource")
-                self.remediate()
-                self.LOGGER.debug("Remediation complete")
+                    self.LOGGER.debug("Remediating resource")
+                    self.remediate()
+                    self.LOGGER.debug("Remediation complete")
 
-                self.post_remediation()
+                    self.post_remediation()
+
+                self.notify()
+
                 return
 
             self.LOGGER.debug("Resource is compliant")
@@ -289,3 +293,8 @@ class AWSRule:
                 self.LOGGER.error(
                     "An error occurred while trying to send a notification: %s", exp
                 )
+
+    def should_remediate(self):
+        """ Determines if remediation action should be taken. """
+        mode = os.environ.get("MODE", "detect").lower()
+        return mode == "remediate"
