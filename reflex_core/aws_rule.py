@@ -91,7 +91,7 @@ class AWSRule:
 
         message = (
             f"{rule_message}\n\n"
-            f"Time: {self.event['time']}\n"
+            f"Event time: {self.event['time']}\n"
             f"Raw event: {self.event}"
         )
 
