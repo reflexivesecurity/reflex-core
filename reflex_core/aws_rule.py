@@ -14,6 +14,7 @@ class AWSRule:
     def __init__(self, event):
         """ Initialize the rule object """
         self.LOGGER.info("Incoming event: %s", event)
+        self.event = event
 
         self.extract_event_data(event)
         self.pre_remediation_functions = []
@@ -84,6 +85,21 @@ class AWSRule:
                 post_remediation_function.__name__,
             )
             post_remediation_function()
+
+    def _get_remediation_message(self):
+        """
+        Adds information that is relevant to all rules to the rule specific
+        remediation message.
+        """
+        rule_message = self.get_remediation_message()
+
+        message = (
+            f"{rule_message}\n\n"
+            f"Event time: {self.event['time']}\n"
+            f"Raw event: {self.event}"
+        )
+
+        return message
 
     def get_remediation_message(self):
         """ Provides a message about the remediation to be sent in notifications """
@@ -287,7 +303,7 @@ class AWSRule:
             try:
                 notifier().notify(
                     subject=self.get_remediation_message_subject(),
-                    message=self.get_remediation_message(),
+                    message=self._get_remediation_message(),
                 )
             except Exception as exp:  #  pylint: disable=broad-except
                 self.LOGGER.error(
