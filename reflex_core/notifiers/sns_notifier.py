@@ -11,11 +11,11 @@ class SNSNotifier(Notifier):
 
     CLIENT = boto3.client("sns")
 
-    def notify(self, message):
+    def notify(self, subject, message):
         """ Sends a notification message via SNS. """
         sns_topic = self.get_sns_topic()
 
-        self.CLIENT.publish(TopicArn=sns_topic, Message=message)
+        self.CLIENT.publish(TopicArn=sns_topic, Subject=subject, Message=message)
 
     def get_sns_topic(self):
         """ Get the SNS topic to notify. """

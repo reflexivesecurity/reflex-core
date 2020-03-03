@@ -85,6 +85,17 @@ class AWSRule:
         """ Provides a message about the remediation to be sent in notifications """
         raise NotImplementedError("get_remediation_message not implemented")
 
+    def get_remediation_message_subject(self):
+        """
+        Returns the subject to use when sending notifications
+
+        Note: Subjects must be ASCII text that begin with a letter, number, or
+        punctuation mark; must not include line breaks or control characters;
+        and must be less than 100 characters long in order to be compatible
+        with SNS. See https://docs.aws.amazon.com/sns/latest/api/API_Publish.html
+        """
+        return f"The Reflex {self.__class__.__name__} was triggered."
+
     def add_pre_remediation_functions(self, functions):
         """
         Sets a function or list of functions to be run before remediation action occurs.
@@ -270,7 +281,10 @@ class AWSRule:
         """ Send notification messages with all Notifiers """
         for notifier in self.notifiers:
             try:
-                notifier().notify(self.get_remediation_message())
+                notifier().notify(
+                    subject=self.get_remediation_message_subject(),
+                    message=self.get_remediation_message(),
+                )
             except Exception as exp:  #  pylint: disable=broad-except
                 self.LOGGER.error(
                     "An error occurred while trying to send a notification: %s", exp
