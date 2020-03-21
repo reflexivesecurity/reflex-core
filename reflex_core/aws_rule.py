@@ -6,6 +6,10 @@ from reflex_core.notifiers import Notifier
 from reflex_core.notifiers import SNSNotifier
 
 
+LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO").upper()
+logging.basicConfig(level=LOG_LEVEL)
+
+
 class AWSRule:
     """ Generic class for AWS compliance rules """
 
