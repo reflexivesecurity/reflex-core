@@ -7,13 +7,12 @@ from reflex_core.notifiers import SNSNotifier
 
 
 LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO").upper()
-logging.basicConfig(level=LOG_LEVEL)
 
 
 class AWSRule:
     """ Generic class for AWS compliance rules """
 
-    LOGGER = logging.getLogger(__name__)
+    LOGGER = logging.getLogger().setLevel(LOG_LEVEL)
 
     def __init__(self, event):
         """ Initialize the rule object """
