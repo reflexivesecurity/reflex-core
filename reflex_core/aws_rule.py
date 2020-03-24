@@ -12,7 +12,8 @@ LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO").upper()
 class AWSRule:
     """ Generic class for AWS compliance rules """
 
-    LOGGER = logging.getLogger().setLevel(LOG_LEVEL)
+    LOGGER = logging.getLogger()
+    LOGGER.setLevel(LOG_LEVEL)
 
     def __init__(self, event):
         """ Initialize the rule object """
