@@ -1,6 +1,7 @@
 """ Module for the AWSRule class """
 import logging
 import os
+import re
 
 from reflex_core.notifiers import Notifier
 from reflex_core.notifiers import SNSNotifier
@@ -118,7 +119,10 @@ class AWSRule:
         and must be less than 100 characters long in order to be compatible
         with SNS. See https://docs.aws.amazon.com/sns/latest/api/API_Publish.html
         """
-        return f"The Reflex {self.__class__.__name__} was triggered."
+        subject = self.__class__.__name__
+        subject_split = re.split('(?=[A-Z])', subject)
+        fixed_subject = ' '.join(subject_split)
+        return f"The Reflex {fixed_subject} was triggered."
 
     def add_pre_remediation_functions(self, functions):
         """
