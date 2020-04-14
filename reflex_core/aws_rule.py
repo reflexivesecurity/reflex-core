@@ -120,7 +120,7 @@ class AWSRule:
         with SNS. See https://docs.aws.amazon.com/sns/latest/api/API_Publish.html
         """
         subject = self.__class__.__name__
-        subject_split = re.split('(?=[A-Z])', subject)
+        subject_split = re.split('(?=(?<=[a-z])[A-Z])|(?=[A-Z](?=[a-z])|(?=^[A-Z]))', subject)
         fixed_subject = ' '.join(subject_split)
         return f"The Reflex {fixed_subject} was triggered."
 
