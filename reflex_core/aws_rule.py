@@ -3,6 +3,8 @@ import logging
 import os
 import re
 
+import boto3
+
 from reflex_core.notifiers import Notifier
 from reflex_core.notifiers import SNSNotifier
 
@@ -20,6 +22,10 @@ class AWSRule:
         """ Initialize the rule object """
         self.LOGGER.info("Incoming event: %s", event)
         self.event = event
+        self.account = event["account"]
+        self.region = event["region"]
+        self.service = self.parse_service_name(event["source"])
+        self.client = self.get_boto3_client()
 
         self.extract_event_data(event)
         self.pre_remediation_functions = []
@@ -27,6 +33,48 @@ class AWSRule:
         self.notifiers = []
 
         self.add_notifiers(SNSNotifier)
+
+    def get_boto3_client(self):
+        """ Instantiate and return a boto3 client """
+        if self.service is None:
+            self.LOGGER.warning("No service name present. Boto3 client not created.")
+            return None
+
+        if self.service not in boto3.session.Session().get_available_services():
+            self.LOGGER.warning("Service name invalid. Boto3 client not created.")
+            return None
+
+        role_arn = self.get_role_arn()
+        role_session_name = self.get_role_session_name()
+        sts_client = boto3.client("sts")
+        sts_response = sts_client.assume_role(
+            RoleArn=role_arn, RoleSessionName=role_session_name
+        )
+        return boto3.client(
+            self.service,
+            region_name=self.region,
+            aws_access_key_id=sts_response["Credentials"]["AccessKeyId"],
+            aws_secret_access_key=sts_response["Credentials"]["SecretAccessKey"],
+            aws_session_token=sts_response["Credentials"]["SessionToken"],
+        )
+
+    def get_role_arn(self):
+        """ Get and return the ARN of the role we will assume """
+        return os.environ.get("ASSUME_ROLE_ARN")
+
+    def get_role_session_name(self):
+        """ Get and return the AWS role session name """
+        return f"{self.__class__.__name__}Session"
+
+    def parse_service_name(self, event_source):
+        """ Parse the AWS service name from event["source"] """
+        if not event_source.startswith("aws."):
+            self.LOGGER.info(
+                "Non-AWS event source present. This is a custom CloudWatch Event."
+            )
+            return None
+        service_name = event_source.replace("aws.", "", 1)
+        return service_name
 
     def extract_event_data(self, event):
         """ Extracts data from the event """
@@ -120,8 +168,10 @@ class AWSRule:
         with SNS. See https://docs.aws.amazon.com/sns/latest/api/API_Publish.html
         """
         subject = self.__class__.__name__
-        subject_split = re.split('(?=(?<=[a-z])[A-Z])|(?=[A-Z](?=[a-z])|(?=^[A-Z]))', subject)
-        fixed_subject = ' '.join(subject_split)
+        subject_split = re.split(
+            "(?=(?<=[a-z])[A-Z])|(?=[A-Z](?=[a-z])|(?=^[A-Z]))", subject
+        )
+        fixed_subject = " ".join(subject_split)
         return f"The Reflex {fixed_subject} was triggered."
 
     def add_pre_remediation_functions(self, functions):
