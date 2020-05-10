@@ -60,7 +60,7 @@ class AWSRule:
 
     def get_role_arn(self):
         """ Get and return the ARN of the role we will assume """
-        return os.environ.get("ASSUME_ROLE_ARN")
+        return f"arn:aws:iam::{self.account}:role/{os.environ.get('ASSUME_ROLE_NAME')}"
 
     def get_role_session_name(self):
         """ Get and return the AWS role session name """
