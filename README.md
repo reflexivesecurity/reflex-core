@@ -4,6 +4,7 @@ Package for the core Reflex classes. You can use these classes to easily create 
 You'll also want to familiarize yourself with the other parts of Reflex:  
 - [reflex-cli](https://www.github.com/cloudmitigator/reflex-cli), a CLI for creating and managing your Reflex rules and environment.
 - [reflex-engine](https://www.github.com/cloudmitigator/reflex-engine), Terraform modules for deploying required Reflex rule infrastructure.
+- [reflex documentation](https://docs.cloudmitigator.com/), general documentation about deploying reflex.
 
 ## Installation
 You can install `reflex-core` using `pip`.
