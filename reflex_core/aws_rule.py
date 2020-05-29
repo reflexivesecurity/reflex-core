@@ -13,13 +13,25 @@ LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO").upper()
 
 
 class AWSRule:
-    """ Generic class for AWS compliance rules """
+    """Generic class for AWS compliance rules.
+
+    Attributes:
+        event (dict): The AWS CloudWatch event that the rule is responding to.
+        account (str): The AWS account number that the event occurred in.
+        region (str): The AWS region that the event occurred in.
+        service (str): The name of the AWS service that triggered the event.
+        client ()
+    """
 
     LOGGER = logging.getLogger()
     LOGGER.setLevel(LOG_LEVEL)
 
     def __init__(self, event):
-        """ Initialize the rule object """
+        """Initialize the rule object.
+
+        Args:
+            event (dict): An AWS CloudWatch event.
+        """
         self.LOGGER.info("Incoming event: %s", event)
         self.event = event
         self.account = event["account"]
@@ -35,7 +47,16 @@ class AWSRule:
         self.add_notifiers(SNSNotifier)
 
     def get_boto3_client(self):
-        """ Instantiate and return a boto3 client """
+        """Instantiate and return a boto3 client.
+
+        Returns:
+            boto3.client: A boto3 client for the service that triggered the event.
+
+            The boto3 client will be for the specific account and region that triggered
+            the event. If no service can be parsed from the event (usually as a result
+            of the event being custom), or the parsed service name is invalid, this
+            will return None.
+        """
         if self.service is None:
             self.LOGGER.warning("No service name present. Boto3 client not created.")
             return None
