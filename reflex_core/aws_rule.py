@@ -13,13 +13,30 @@ LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO").upper()
 
 
 class AWSRule:
-    """ Generic class for AWS compliance rules """
+    """Generic class for AWS compliance rules.
+
+    Attributes:
+        event (dict): The AWS CloudWatch event that the rule is responding to.
+        account (str): The AWS account number that the event occurred in.
+        region (str): The AWS region that the event occurred in.
+        service (str): The name of the AWS service that triggered the event.
+        client (boto3.client): A boto3 client for the service that triggered the event.
+        pre_remediation_functions (list): A list of callables (usually functions)
+            to be run before remediation action occurs.
+        post_remediation_functions (list): A list of callables (usually functions)
+            to be run after remediation action occurs.
+        notifiers (list): A list of Notifiers that will send notifications.
+    """
 
     LOGGER = logging.getLogger()
     LOGGER.setLevel(LOG_LEVEL)
 
     def __init__(self, event):
-        """ Initialize the rule object """
+        """Initialize the rule object.
+
+        Args:
+            event (dict): An AWS CloudWatch event.
+        """
         self.LOGGER.info("Incoming event: %s", event)
         self.event = event
         self.account = event["account"]
@@ -35,7 +52,16 @@ class AWSRule:
         self.add_notifiers(SNSNotifier)
 
     def get_boto3_client(self):
-        """ Instantiate and return a boto3 client """
+        """Instantiate and return a boto3 client.
+
+        Returns:
+            boto3.client: A boto3 client for the service that triggered the event.
+
+            The boto3 client will be for the specific account and region that triggered
+            the event. If no service can be parsed from the event (usually as a result
+            of the event being custom), or the parsed service name is invalid, this
+            will return None.
+        """
         if self.service is None:
             self.LOGGER.warning("No service name present. Boto3 client not created.")
             return None
@@ -59,7 +85,11 @@ class AWSRule:
         )
 
     def get_role_arn(self):
-        """ Get and return the ARN of the role we will assume """
+        """Get and return the ARN of the role we will assume.
+
+        Returns:
+            str: The ARN of the IAM role we will assume for our boto3 client.
+        """
         return f"arn:aws:iam::{self.account}:role/{os.environ.get('ASSUME_ROLE_NAME')}"
 
     def get_role_session_name(self):
@@ -67,7 +97,16 @@ class AWSRule:
         return f"{self.__class__.__name__}Session"
 
     def parse_service_name(self, event_source):
-        """ Parse the AWS service name from event["source"] """
+        """Parse the AWS service name from event["source"].
+
+        Args:
+            event_source (str): The event source from the tirggering CWE.
+
+        Returns:
+            str: The name of the AWS service that produced the event.
+
+            Returns None if the event contains a Non-AWS event source.
+        """
         if not event_source.startswith("aws."):
             self.LOGGER.info(
                 "Non-AWS event source present. This is a custom CloudWatch Event."
@@ -77,16 +116,29 @@ class AWSRule:
         return service_name
 
     def extract_event_data(self, event):
-        """ Extracts data from the event """
+        """Extracts required data from the event.
+
+        Args:
+            event (dict): The event that triggered the rule.
+
+        Returns:
+            None
+
+        Raises:
+            NotImplementedError: Raised if the rule has not implemented logic
+                for extracting required data.
+        """
         raise NotImplementedError("extract_event_data not implemented")
 
     def run_compliance_rule(self):
-        """
-        Runs all steps of the compliance rule
+        """Runs all steps of the compliance rule.
 
         Checks for SystemExit to allow for use of sys.exit() to end rule
         execution without the Lambda failing, incrementing failure counter,
         and retrying.
+
+        Returns:
+            None
         """
         try:
             self.LOGGER.debug("Checking if resource is compliant")
@@ -113,15 +165,40 @@ class AWSRule:
             raise
 
     def resource_compliant(self):
-        """ Returns True if the resource is compliant, False otherwise """
+        """Determine if the resource complies with rule requirements.
+
+        Returns:
+            bool: True if the resource is compliant, False otherwise.
+
+        Raises:
+            NotImplementedError: Raised if the rule has not implemented logic
+                for determining if the resource is compliant.
+        """
         raise NotImplementedError("resource_compliant not implemented")
 
     def remediate(self):
-        """ Fixes the configuration of the non-compliant resource """
+        """Fixes the configuration of the non-compliant resource.
+
+        Returns:
+            None
+
+        Raises:
+            NotImplementedError: Raised if the rule has not implemented logic
+                for fixing the resource configuration.
+        """
         raise NotImplementedError("remediate not implemented")
 
     def pre_remediation(self):
-        """ Any steps to take before remediating the resource """
+        """Runs all pre-remediation functions.
+
+        This function executes all functions that have been registered in the
+        pre_remediation_functions list. This is run immediately before the
+        remediate function is called. Functions are executed in the order
+        they occur in the pre_remediation_functions list.
+
+        Returns:
+            None
+        """
         self.LOGGER.debug("Running pre-remediation functions")
         for pre_remediation_function in self.pre_remediation_functions:
             self.LOGGER.debug(
@@ -130,7 +207,16 @@ class AWSRule:
             pre_remediation_function()
 
     def post_remediation(self):
-        """ Any steps to take after remediating the resource """
+        """Runs all post-remediation functions.
+
+        This function executes all functions that have been registered in the
+        post_remediation_functions list. This is run immediately after the
+        remediate function is called. Functions are executed in the order
+        they occur in the post_remediation_functions list.
+
+        Returns:
+            None
+        """
         self.LOGGER.debug("Running post-remediation functions")
         for post_remediation_function in self.post_remediation_functions:
             self.LOGGER.debug(
@@ -140,9 +226,15 @@ class AWSRule:
             post_remediation_function()
 
     def _get_remediation_message(self):
-        """
-        Adds information that is relevant to all rules to the rule specific
-        remediation message.
+        """Generates the message that will be sent in notifications.
+
+        This function retrieves the rule specific notification message
+        (from get_remedation_message) and appends generic information,
+        such as the time at which the triggering event occurred and
+        the raw event data.
+
+        Returns:
+            str: The message that will be sent in notifications.
         """
         rule_message = self.get_remediation_message()
 
@@ -155,17 +247,27 @@ class AWSRule:
         return message
 
     def get_remediation_message(self):
-        """ Provides a message about the remediation to be sent in notifications """
+        """Provides a rule specific message to be sent in notifications.
+
+        Returns:
+            str: The rule specific message to be sent in notifications.
+
+        Raises:
+            NotImplementedError: Raised if the rule has not implemented logic
+                for creating a notification message.
+        """
         raise NotImplementedError("get_remediation_message not implemented")
 
     def get_remediation_message_subject(self):
-        """
-        Returns the subject to use when sending notifications
+        """Provides the subject to use when sending notifications.
 
         Note: Subjects must be ASCII text that begin with a letter, number, or
         punctuation mark; must not include line breaks or control characters;
         and must be less than 100 characters long in order to be compatible
         with SNS. See https://docs.aws.amazon.com/sns/latest/api/API_Publish.html
+
+        Returns:
+            str: The subject to use in notifications.
         """
         subject = self.__class__.__name__
         subject_split = re.split(
@@ -175,11 +277,13 @@ class AWSRule:
         return f"The Reflex {fixed_subject} was triggered."
 
     def add_pre_remediation_functions(self, functions):
-        """
-        Sets a function or list of functions to be run before remediation action occurs.
+        """Sets a function or list of functions to be run before remediation action occurs.
 
         If anything other than a function is present in the list, it will be ignored.
         If something other than a function or list is passed, it will be ignored.
+
+        Returns:
+            None
         """
         if isinstance(functions, list):
             for function in functions:
@@ -205,11 +309,13 @@ class AWSRule:
             )
 
     def remove_pre_remediation_functions(self, functions):
-        """
-        Stop a function or list of functions from being run pre-remediation.
+        """Stop a function or list of functions from being run pre-remediation.
 
         Takes a function or list of functions and removes them from the list
         of pre-remediation functions. Anything not in the list will be ignored.
+
+        Returns:
+            None
         """
         if isinstance(functions, list):
             for function in functions:
@@ -236,11 +342,13 @@ class AWSRule:
                 )
 
     def add_post_remediation_functions(self, functions):
-        """
-        Sets a function or list of functions to be run after remediation action occurs.
+        """Sets a function or list of functions to be run after remediation action occurs.
 
         If anything other than a function is present in the list, it will be ignored.
         If something other than a function or list is passed, it will be ignored.
+
+        Returns:
+            None
         """
         if isinstance(functions, list):
             for function in functions:
@@ -266,11 +374,13 @@ class AWSRule:
             )
 
     def remove_post_remediation_functions(self, functions):
-        """
-        Stop a function or list of functions from being run post-remediation.
+        """Stop a function or list of functions from being run post-remediation.
 
         Takes a function or list of functions and removes them from the list
         of post-remediation functions. Anything not in the list will be ignored.
+
+        Returns:
+            None
         """
         if isinstance(functions, list):
             for function in functions:
@@ -297,11 +407,13 @@ class AWSRule:
                 )
 
     def add_notifiers(self, notifiers):
-        """
-        Sets a Notifier or list of Notifiers to send remediation notifications with.
+        """Sets a Notifier or list of Notifiers to send remediation notifications with.
 
         If anything other than a Notifier is present in the list, it will be ignored.
         If something other than a Notifier or list is passed, it will be ignored.
+
+        Returns:
+            None
         """
         if isinstance(notifiers, list):
             for notifier in notifiers:
@@ -325,12 +437,14 @@ class AWSRule:
             )
 
     def remove_notifiers(self, notifiers):
-        """
-        Stop a Notifier or list of Notifiers from sending remediation notifications.
+        """Stop a Notifier or list of Notifiers from sending remediation notifications.
 
         Takes a Notifier or list of Notifiers and stops them from sending
         remediation notifications. Anything not currently configured to send
         notifictions will be ignored.
+
+        Returns:
+            None
         """
         if isinstance(notifiers, list):
             for notifier in notifiers:
@@ -356,7 +470,11 @@ class AWSRule:
                 )
 
     def notify(self):
-        """ Send notification messages with all Notifiers """
+        """Send notification messages with all Notifiers.
+
+        Returns:
+            None
+        """
         for notifier in self.notifiers:
             try:
                 notifier().notify(
@@ -369,6 +487,10 @@ class AWSRule:
                 )
 
     def should_remediate(self):
-        """ Determines if remediation action should be taken. """
+        """Determines if remediation action should be taken.
+
+        Returns:
+            bool: True if remediation mode is active, False otherwise.
+        """
         mode = os.environ.get("MODE", "detect").lower()
         return mode == "remediate"
