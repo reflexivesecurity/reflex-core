@@ -40,6 +40,14 @@ jobs:
           body: ${{ env.RELEASE_BODY }}
           draft: false
           prerelease: false
+      - name: Trigger deploy
+        run: |
+          curl -X POST https://api.github.com/repos/cloudmitigator/reflex-docs-infrastructure/dispatches \
+          -H "Accept: application/vnd.github.everest-preview+json" \
+          -H "Authorization: token $GITHUB_PAT" \
+          --data '{"event_type": "deploy"}'
+        env:
+          GITHUB_PAT: ${{ secrets.GITHUB_PAT }}
       - name: Build and publish
         if: env.VERSION_CHANGED
         env:
