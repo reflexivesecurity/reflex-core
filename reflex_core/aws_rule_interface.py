@@ -21,6 +21,10 @@ class AWSRuleInterface:
         region (str): The AWS region that the event occurred in.
         service (str): The name of the AWS service that triggered the event.
         client (boto3.client): A boto3 client for the service that triggered the event.
+        pre_compliance_check_functions (list): A list of callables (usually functions)
+            to be run before the resource compliance check occurs.
+        post_compliance_check_functions (list): A list of callables (usually functions)
+            to be run after rthe resource compliance check occurs.
         pre_remediation_functions (list): A list of callables (usually functions)
             to be run before remediation action occurs.
         post_remediation_functions (list): A list of callables (usually functions)
