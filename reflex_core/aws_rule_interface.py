@@ -558,10 +558,10 @@ class AWSRuleInterface:
             )
 
     def _remove_functions(self, functions, function_list, list_name):
-        """Stop a function or list of functions from being run post-remediation.
+        """Remove a function or list of functions from the provided function list.
 
-        Takes a function or list of functions and removes them from the list
-        of post-remediation functions. Anything not in the list will be ignored.
+        Takes a function or list of functions and removes them from function_list.
+        Anything not in function_list will be ignored.
 
         Returns:
             None
