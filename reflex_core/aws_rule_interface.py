@@ -324,7 +324,7 @@ class AWSRuleInterface:
             "(?=(?<=[a-z])[A-Z])|(?=[A-Z](?=[a-z])|(?=^[A-Z]))", subject
         )
         fixed_subject = " ".join(subject_split)
-        return f"The Reflex {fixed_subject} was triggered."
+        return f"The Reflex Rule {fixed_subject} was triggered."
 
     def add_pre_compliance_check_functions(self, functions):
         """Sets a function or list of functions to be run before the resource
@@ -359,7 +359,7 @@ class AWSRuleInterface:
         )
 
     def add_post_compliance_check_functions(self, functions):
-        """Sets a function or list of functions to be run after the resource 
+        """Sets a function or list of functions to be run after the resource
         compliance check occurs.
 
         If anything other than a function is present in the list, it will be ignored.
