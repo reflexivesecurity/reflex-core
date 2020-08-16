@@ -320,9 +320,7 @@ class AWSRuleInterface:
             str: The subject to use in notifications.
         """
         subject = self.__class__.__name__
-        subject_split = re.split(
-            "(?=(?<=[a-z])[A-Z])|(?=[A-Z](?=[a-z])|(?=^[A-Z]))", subject
-        )
+        subject_split = re.findall(r"[A-Z](?:[a-z]+|[A-Z]*(?=[A-Z]|$))", subject)
         fixed_subject = " ".join(subject_split)
         return f"The Reflex Rule {fixed_subject} was triggered."
 
