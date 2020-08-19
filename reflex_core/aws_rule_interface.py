@@ -48,7 +48,7 @@ class AWSRuleInterface:
 
         if self.event.get('Type') == 'SubscriptionConfirmation':
             self.handle_subscription_confirmation()
-            continue
+            return None
         else:
             self.subscription_confirmation_event = False
 
