@@ -77,7 +77,7 @@ class AWSRuleInterface:
             None
         """
 
-        subscription_url = self.event.get('SubscriptionURL')
+        subscription_url = self.event.get('SubscribeURL')
         requests.get(subscription_url)
         self.subscription_confirmation_event = True
 
