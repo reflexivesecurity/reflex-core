@@ -27,7 +27,7 @@ class MyRule(AWSRule):
     # etc
 ```
 
-For examples, browse provided rules on [ReflexiveSecurity's GitHub](https://www.github.com/reflexivesecurity/).
+For examples, browse provided rules on [Reflexive Security's GitHub](https://www.github.com/reflexivesecurity/).
 
 ## License
 Reflex is made available under the MPL 2.0 license. For more information view the [LICENSE](https://github.com/reflexivesecurity/reflex-core/blob/master/LICENSE)
