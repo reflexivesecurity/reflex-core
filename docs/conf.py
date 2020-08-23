@@ -19,8 +19,8 @@ sys.path.insert(0, os.path.abspath(".."))
 # -- Project information -----------------------------------------------------
 
 project = "reflex-core"
-copyright = "2020, CloudMitigator"
-author = "CloudMitigator"
+copyright = "2020, ReflexiveSecurity"
+author = "ReflexiveSecurity"
 
 
 # -- General configuration ---------------------------------------------------

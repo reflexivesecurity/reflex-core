@@ -2,9 +2,9 @@
 Package for the core Reflex classes. You can use these classes to easily create Reflex rules to secure your cloud environment (currently only supports AWS).
 
 You'll also want to familiarize yourself with the other parts of Reflex:  
-- [reflex-cli](https://www.github.com/cloudmitigator/reflex-cli), a CLI for creating and managing your Reflex rules and environment.
-- [reflex-engine](https://www.github.com/cloudmitigator/reflex-engine), Terraform modules for deploying required Reflex rule infrastructure.
-- [reflex documentation](https://docs.cloudmitigator.com/), general documentation about deploying reflex.
+- [reflex-cli](https://www.github.com/reflexivesecurity/reflex-cli), a CLI for creating and managing your Reflex rules and environment.
+- [reflex-engine](https://www.github.com/reflexivesecurity/reflex-engine), Terraform modules for deploying required Reflex rule infrastructure.
+- [reflex documentation](https://docs.reflexivesecurity.com/), general documentation about deploying reflex.
 
 ## Installation
 You can install `reflex-core` using `pip`.
@@ -27,7 +27,7 @@ class MyRule(AWSRule):
     # etc
 ```
 
-For examples, browse provided rules on [CloudMitigator's GitHub](https://www.github.com/cloudmitigator/).
+For examples, browse provided rules on [ReflexiveSecurity's GitHub](https://www.github.com/reflexivesecurity/).
 
 ## License
-Reflex is made available under the MPL 2.0 license. For more information view the [LICENSE](https://github.com/cloudmitigator/reflex-core/blob/master/LICENSE)
+Reflex is made available under the MPL 2.0 license. For more information view the [LICENSE](https://github.com/reflexivesecurity/reflex-core/blob/master/LICENSE)
