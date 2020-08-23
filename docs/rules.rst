@@ -9,3 +9,8 @@ AWSRule
 -------
 .. autoclass:: AWSRule
    :members:
+
+AWSRuleInterface
+-------
+.. autoclass:: AWSRuleInterface
+   :members:
