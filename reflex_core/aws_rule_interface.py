@@ -2,10 +2,8 @@
 import logging
 import os
 import re
-import sys
 
 import boto3
-import requests
 
 from reflex_core.notifiers import Notifier
 from reflex_core.notifiers import SNSNotifier
@@ -45,13 +43,6 @@ class AWSRuleInterface:
         """
         self.LOGGER.info("Incoming event: %s", event)
         self.event = event
-
-        if self.event.get('Type') == 'SubscriptionConfirmation':
-            self.handle_subscription_confirmation()
-            return None
-        else:
-            self.subscription_confirmation_event = False
-
         self.account = event["account"]
         self.region = event["region"]
         self.service = self.parse_service_name(event["source"])
@@ -65,22 +56,6 @@ class AWSRuleInterface:
         self.notifiers = []
 
         self.add_notifiers(SNSNotifier)
-
-    def handle_subscription_confirmation(self):
-        """Respond to an outside subscription notification.
-
-        For SNS topic subscriptions that require manual subscription confirmations, this
-        function will parse the event message and make the request to the confirmation
-        url.
-
-        Returns:
-            None
-        """
-
-        subscription_url = self.event.get('SubscribeURL')
-        requests.get(subscription_url)
-        self.subscription_confirmation_event = True
-
 
     def get_boto3_client(self):
         """Instantiate and return a boto3 client.
@@ -172,9 +147,6 @@ class AWSRuleInterface:
             None
         """
         try:
-            if self.subscription_confirmation_event:
-                self.LOGGER.info("Subscription confirmation event, exiting.")
-                sys.exit(0)
             self.pre_compliance_check()
 
             self.LOGGER.debug("Checking if resource is compliant")
