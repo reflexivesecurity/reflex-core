@@ -37,5 +37,5 @@ class SubscriptionConfirmation:
             None
         """
 
-        subscription_url = self.event.get('SubscribeURL')
+        subscription_url = self.event.get("SubscribeURL")
         requests.get(subscription_url)
