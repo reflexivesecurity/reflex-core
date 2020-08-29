@@ -1,4 +1,4 @@
-""" Module for the AWSRuleInterface class """
+""" Module for the SubscriptionConfirmation class """
 import logging
 import os
 import requests
@@ -8,7 +8,7 @@ LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO").upper()
 
 
 class SubscriptionConfirmation:
-    """Generic interface class for AWS compliance rules.
+    """Class for managing subscription confirmations in Reflex
 
     Attributes:
         event (dict): The AWS subscription confirmation event that the lambda
@@ -19,7 +19,7 @@ class SubscriptionConfirmation:
     LOGGER.setLevel(LOG_LEVEL)
 
     def __init__(self, event):
-        """Initialize the rule object.
+        """Initialize the SubscriptionConfirmation object.
 
         Args:
             event (dict): An AWS CloudWatch event.
