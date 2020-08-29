@@ -3,39 +3,27 @@ import logging
 import os
 import requests
 
-
 LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO").upper()
+LOGGER = logging.getLogger()
+LOGGER.setLevel(LOG_LEVEL)
 
 
-class SubscriptionConfirmation:
-    """Class for managing subscription confirmations in Reflex
+def is_subscription_confirmation(event):
+    """Determines if  event payload is for confirming subscriptions."""
+    return event.get("Type") == "SubscriptionConfirmation"
 
-    Attributes:
-        event (dict): The AWS subscription confirmation event that the lambda
-        is responding to.
+
+def confirm_subscription(event):
+    """Respond to an outside subscription notification.
+
+    For SNS topic subscriptions that require manual subscription confirmations, this
+    function will parse the event message and make the request to the confirmation
+    url.
+
+    Returns:
+        None
     """
 
-    LOGGER = logging.getLogger()
-    LOGGER.setLevel(LOG_LEVEL)
-
-    def __init__(self, event):
-        """Initialize the SubscriptionConfirmation object.
-
-        Args:
-            event (dict): An AWS CloudWatch event.
-        """
-        self.event = event
-
-    def handle_subscription_confirmation(self):
-        """Respond to an outside subscription notification.
-
-        For SNS topic subscriptions that require manual subscription confirmations, this
-        function will parse the event message and make the request to the confirmation
-        url.
-
-        Returns:
-            None
-        """
-
-        subscription_url = self.event.get("SubscribeURL")
-        requests.get(subscription_url)
+    subscription_url = event.get("SubscribeURL")
+    LOGGER.info("Confirming subscription by requesting URL: %s", subscription_url)
+    requests.get(subscription_url)
