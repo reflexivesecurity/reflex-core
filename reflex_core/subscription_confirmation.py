@@ -1,6 +1,7 @@
 """ Module for the SubscriptionConfirmation class """
 import logging
 import os
+
 import requests
 
 LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO").upper()
