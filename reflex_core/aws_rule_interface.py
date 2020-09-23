@@ -1,13 +1,12 @@
 """ Module for the AWSRuleInterface class """
+import json
 import logging
 import os
 import re
 
 import boto3
 
-from reflex_core.notifiers import Notifier
-from reflex_core.notifiers import SNSNotifier
-
+from reflex_core.notifiers import Notifier, SNSNotifier
 
 LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO").upper()
 
@@ -291,7 +290,7 @@ class AWSRuleInterface:
         message = (
             f"{rule_message}\n\n"
             f"Event time: {self.event['time']}\n"
-            f"Raw event: {self.event}"
+            f"Raw event: {json.dumps(self.event, indent=2)}"
         )
 
         return message
