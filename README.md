@@ -1,4 +1,10 @@
 # reflex-core
+## reflex
+![Reflex](https://avatars3.githubusercontent.com/u/59374073?s=200&v=4)
+
+Reflex enforces security best practices in cloud environments through event-driven automation. Get started by visiting [our documentation](https://docs.reflexivesecurity.com/).
+
+## reflex-core
 Package for the core Reflex classes. You can use these classes to easily create Reflex rules to secure your cloud environment (currently only supports AWS).
 
 You'll also want to familiarize yourself with the other parts of Reflex:  
