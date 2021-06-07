@@ -8,6 +8,7 @@ import traceback
 import boto3
 
 from reflex_core.notifiers import Notifier, SNSNotifier
+from reflex_core import utilities
 
 LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO").upper()
 
@@ -68,27 +69,10 @@ class AWSRuleInterface:
             of the event being custom), or the parsed service name is invalid, this
             will return None.
         """
-        if self.service is None:
-            self.LOGGER.warning("No service name present. Boto3 client not created.")
-            return None
-
-        if self.service not in boto3.session.Session().get_available_services():
-            self.LOGGER.warning("Service name invalid. Boto3 client not created.")
-            return None
-
         role_arn = self.get_role_arn()
         role_session_name = self.get_role_session_name()
-        sts_client = boto3.client("sts")
-        sts_response = sts_client.assume_role(
-            RoleArn=role_arn, RoleSessionName=role_session_name
-        )
-        return boto3.client(
-            self.service,
-            region_name=self.region,
-            aws_access_key_id=sts_response["Credentials"]["AccessKeyId"],
-            aws_secret_access_key=sts_response["Credentials"]["SecretAccessKey"],
-            aws_session_token=sts_response["Credentials"]["SessionToken"],
-        )
+
+        return utilities.get_boto3_client(self.service, role_arn, role_session_name, self.region)
 
     def get_role_arn(self):
         """Get and return the ARN of the role we will assume.
@@ -96,7 +80,7 @@ class AWSRuleInterface:
         Returns:
             str: The ARN of the IAM role we will assume for our boto3 client.
         """
-        return f"arn:aws:iam::{self.account}:role/{os.environ.get('ASSUME_ROLE_NAME')}"
+        return utilities.get_assume_role_arn(self.account)
 
     def get_role_session_name(self):
         """ Get and return the AWS role session name """
